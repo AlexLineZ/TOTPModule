@@ -13,8 +13,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IOTPService, OTPService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEntropyCheck, EntropyCheck>();
 builder.Services.AddControllers();
 
 builder.Services.AddAuthorization();

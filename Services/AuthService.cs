@@ -38,7 +38,7 @@ namespace OTPModule.Services
             var secretKey = new SecretKeyEntity()
             {
                 Id = Guid.NewGuid(),
-                SecretKey = _OTPService.GenerateSecretKey()
+                SecretKey = await _OTPService.GenerateSecretKey()
             };
 
             var user = new UserEntity()
