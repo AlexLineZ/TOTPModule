@@ -1,0 +1,6 @@
+@OTPModule_HostAddress = http://localhost:5274
+
+GET {{OTPModule_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
