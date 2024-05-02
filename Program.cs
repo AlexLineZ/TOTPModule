@@ -17,6 +17,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<IOTPService, OTPService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEntropyCheck, EntropyCheck>();
+builder.Services.AddScoped<IDesService, DesService>();
 builder.Services.AddControllers();
 
 builder.Services.AddAuthorization();
