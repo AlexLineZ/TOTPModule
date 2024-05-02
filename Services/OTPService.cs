@@ -11,8 +11,9 @@ namespace OTPModule.Services
     {
         private const int Step = 30;
         private const int DigitLength = 6;
-        HttpClient _httpClient;
-        IEntropyCheck _entropyCheck;
+
+        private HttpClient _httpClient;
+        private IEntropyCheck _entropyCheck;
 
         public OTPService(HttpClient httpClient, IEntropyCheck entropyCheck)
         {
@@ -23,8 +24,6 @@ namespace OTPModule.Services
         // https://habr.com/ru/articles/534064 
         public async Task<byte[]> GenerateSecretKey()
         {
-            var key = GenerateSecretKey();
-
             if (_entropyCheck.IsEntropySufficient())
             {
                 return GenerateSecretKeyWithEntropy();
