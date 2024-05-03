@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
+using QRCoder;
 using OTPModule.Data;
 using OTPModule.Dto;
 using OTPModule.Entities;
 using OTPModule.Migrations;
 using OTPModule.Services.IServices;
+using QRCoder;
 
 namespace OTPModule.Services
 {
@@ -33,7 +34,7 @@ namespace OTPModule.Services
             throw new NotImplementedException();
         }
 
-        public async Task<TokenResponseDto> Register(UserRegisterDto registerDto)
+        public async Task<QrCodeDto> Register(UserRegisterDto registerDto)
         {
             var secretKey = new SecretKeyEntity()
             {
@@ -50,7 +51,14 @@ namespace OTPModule.Services
             };
             _userDbContext.userEntities.Add(user);
             await _userDbContext.SaveChangesAsync();
-            return new TokenResponseDto() { Token = "" };
+            
+            QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(secretKey.SecretKey, QRCodeGenerator.ECCLevel.Q);
+
+            Base64QRCode qrCode = new Base64QRCode(qrCodeData);
+            string qrCodeBase64 = qrCode.GetGraphic(20);
+
+            return new QrCodeDto { Qr = qrCodeBase64 };
         }
 
         public async Task<TokenResponseDto> TwoFactorAuthentication(TOTPDto TOTPDto)

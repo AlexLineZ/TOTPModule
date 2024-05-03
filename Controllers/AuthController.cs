@@ -15,7 +15,7 @@ namespace OTPModule.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<TokenResponseDto>> Register([FromBody] UserRegisterDto userRegister)
+        public async Task<ActionResult<QrCodeDto>> Register([FromBody] UserRegisterDto userRegister)
         {
             var token = await _authService.Register(userRegister);
             return Ok(token);
