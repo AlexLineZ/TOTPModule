@@ -9,9 +9,11 @@ namespace OTPModule.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        public AuthController(IAuthService authService)
+        private readonly IRSAService _rsaService;
+        public AuthController(IAuthService authService, IRSAService RSAService)
         {
             _authService = authService;
+            _rsaService = RSAService;
         }
 
         [HttpPost("register")]
@@ -41,25 +43,18 @@ namespace OTPModule.Controllers
             //string token = HttpContext.Request.Headers["Authorization"];
             //var user = await _authService.GetUser(token);
             return Ok();
-
         }
 
-        /*[HttpPut("profile")]
-        [Authorize]
-        public async Task<IActionResult> EditProfile([FromBody] UserEditDto userEdit)
-        {
-            string token = HttpContext.Request.Headers["Authorization"];
-            await _authService.Edit(userEdit, token);
-            return Ok();
+        [HttpPost("encodeMessage")]
+        public async Task<ActionResult<EncodeDto>> EncodeMessage([FromBody] string str)
+        { 
+            return Ok(_rsaService.Encode(str));
         }
 
-        [HttpPost("logout")]
-        [Authorize]
-        public async Task<IActionResult> Logout()
+        [HttpPost("decodeMessage")]
+        public async Task<ActionResult<string>> DecodeMessage([FromBody] DecodeDto decodeDto)
         {
-            string token = HttpContext.Request.Headers["Authorization"];
-            await _authService.Logout(token);
-            return Ok();
-        }*/
+            return Ok(_rsaService.Decode(decodeDto));
+        }
     }
 }
