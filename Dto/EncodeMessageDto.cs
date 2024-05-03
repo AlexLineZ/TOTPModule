@@ -1,8 +1,8 @@
 ﻿namespace OTPModule.Dto
 {
-    public class EncodeDto
+    public class EncodeMessageDto
     {
-        public KeysDto Keys { get; set; }
         public string Message { get; set; }
+        public OpenKeyDto OpenKey { get; set; }
     }
 }

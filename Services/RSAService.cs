@@ -1,5 +1,6 @@
 ﻿using OTPModule.Dto;
 using OTPModule.Services.IServices;
+using System;
 using System.Diagnostics;
 using System.Numerics;
 
@@ -7,33 +8,18 @@ namespace OTPModule.Services
 {
     public class RSAService:IRSAService
     {
-        private Random random = new Random();
-
-        private ulong Gcd(ulong a, ulong b)
-        {
-            while (b != 0)
-            {
-                ulong temp = b;
-                b = a % b;
-                a = temp;
-            }
-            return a;
+        Random _random;
+        public RSAService(Random random) {
+            _random = random;
         }
 
-        private ulong ModInverse(ulong a, ulong m)
+        public ulong GeneratePrime()
         {
-            ulong m0 = m, x0 = 0, x1 = 1;
-            while (a > 1)
-            {
-                ulong q = a / m;
-                ulong temp = m;
-                m = a % m;
-                a = temp;
-                temp = x0;
-                x0 = x1 - q * x0;
-                x1 = temp;
+            var key = RandomULong(2, 500);
+            while (!IsPrime(key)) {
+                key = RandomULong(2, 500);
             }
-            return x1 < 0 ? x1 + m0 : x1;
+            return key;
         }
 
         private bool IsPrime(ulong n, int k = 5)
@@ -51,58 +37,59 @@ namespace OTPModule.Services
 
             for (int i = 0; i < k; i++)
             {
-                ulong a = RandomNumber(2, n - 1);
+                ulong a = RandomULong(2, n - 1);
                 ulong x = ModPow(a, d, n);
+
                 if (x == 1 || x == n - 1)
                     continue;
-                for (int j = 0; j < (int)Math.Ceiling(Math.Log(n - 1, 2)); j++)
+
+                bool isWitness = false;
+                for (ulong j = 1; j < n - 1; j *= 2)
                 {
-                    x = ModPow(x, 2, n);
+                    x = (x * x) % n;
                     if (x == n - 1)
+                    {
+                        isWitness = true;
                         break;
+                    }
                 }
-                if (x != n - 1)
+                if (!isWitness)
                     return false;
             }
             return true;
         }
 
-        private ulong GeneratePrime(int keyLength = 128)
+        private ulong ModPow(ulong value, ulong exponent, ulong modulus)
         {
-            ulong p = RandomNumber(0, 1) | (1UL << keyLength - 1) | 1;
-
-            while (!IsPrime(p))
-                p = RandomNumber(0, 1) | (1UL << keyLength - 1) | 1;
-
-            return p;
-        }
-
-
-        private ulong RandomNumber(ulong min, ulong max)
-        {
-            byte[] data = new byte[sizeof(ulong)];
-            random.NextBytes(data);
-            ulong result = BitConverter.ToUInt64(data, 0);
-            return result % (max - min) + min;
-        }
-
-        private KeysDto GenerateKeyPair(int keyLength = 128)
-        {
-            ulong p = GeneratePrime(keyLength);
-            ulong q = GeneratePrime(keyLength);
-
-            ulong n = p * q;
-            ulong phi = (p - 1) * (q - 1);
-
-            ulong e = RandomNumber(1, phi);
-            ulong g = Gcd(e, phi);
-            while (g != 1)
+            if (modulus == 1) return 0;
+            ulong result = 1;
+            value = value % modulus;
+            while (exponent > 0)
             {
-                e = RandomNumber(1, phi);
-                g = Gcd(e, phi);
+                if (exponent % 2 == 1)
+                {
+                    result = (result * value) % modulus;
+                }
+                exponent = exponent/2;
+                value = (value * value) % modulus;
             }
+            return result;
+        }
 
-            ulong d = ModInverse(e, phi);
+        public KeysDto GenerateKeys()
+        {
+            ulong p = GeneratePrime();
+            ulong q = GeneratePrime();
+            var n = p * q;
+            var m = (p-1) * (q-1);
+            ulong e = CalculateE(m);
+            ulong d = CalculateD(e, m);
+
+            var privateKey = new PrivateKeyDto()
+            {
+                D = d,
+                N = n
+            };
 
             var openKey = new OpenKeyDto()
             {
@@ -110,55 +97,108 @@ namespace OTPModule.Services
                 N = n
             };
 
-            var closedKey = new PrivateKeyDto()
+            return new KeysDto()
             {
-                D = d,
-                N = n
-            };
-
-            return new KeysDto() {
-                ClosedKey = closedKey,
-                OpenKey = openKey,
+                ClosedKey = privateKey,
+                OpenKey = openKey
             };
         }
 
-        public EncodeDto Encode(string plaintext)
+        public List<string> Encode(EncodeMessageDto encodeMessageDto)
         {
-            var keys = GenerateKeyPair();
+            List<string> result = new List<string>();
 
-            var cipher = new ulong[plaintext.Length];
-            for (int i = 0; i < plaintext.Length; i++)
-                cipher[i] = ModPow(plaintext[i], keys.OpenKey.E, keys.OpenKey.N);
+            BigInteger bi;
 
-            return new EncodeDto() {
-                Keys = keys,
-                Message = string.Join("", cipher)
-            };
-        }
-
-        public string Decode(DecodeDto decodeDto)
-        {
-            string plain = "";
-            for (int i = 0; i < decodeDto.Message.Length; i++)
-                plain += (char)ModPow(decodeDto.Message[i], decodeDto.PrivateKey.D, decodeDto.PrivateKey.N);
-
-            return plain;
-        }
-
-        private ulong ModPow(ulong baseNum, ulong exponent, ulong modulus)
-        {
-            if (modulus == 1)
-                return 0;
-            ulong result = 1;
-            baseNum = baseNum % modulus;
-            while (exponent > 0)
+            for (int i = 0; i < encodeMessageDto.Message.Length; i++)
             {
-                if (exponent % 2 == 1)
-                    result = (result * baseNum) % modulus;
-                exponent = exponent >> 1;
-                baseNum = (baseNum * baseNum) % modulus;
+                int index = encodeMessageDto.Message[i];
+
+                bi = new BigInteger(index);
+                bi = BigInteger.Pow(bi, (int)encodeMessageDto.OpenKey.E);
+
+                BigInteger n_ = new(encodeMessageDto.OpenKey.N);
+
+                bi = bi % n_;
+
+                result.Add(bi.ToString());
             }
+
             return result;
+        }
+
+        public string Decode(DecodeMessageDto decodeMessageDto)
+        {
+            string result = "";
+
+            BigInteger bi;
+
+            foreach (string item in decodeMessageDto.Message)
+            {
+                bi = new BigInteger(Convert.ToDouble(item));
+                bi = BigInteger.Pow(bi, (int)decodeMessageDto.PrivateKey.D);
+
+                BigInteger n_ = new BigInteger((int)decodeMessageDto.PrivateKey.N);
+
+                bi = bi % n_;
+
+                int index = Convert.ToInt32(bi.ToString());
+
+                result += (char)index;
+            }
+
+            return result;
+        }
+
+        private ulong ModInverse(ulong a, ulong m)
+        {
+            ulong result = a % m;
+            for (ulong x = 1; x < m; x++)
+            {
+                if ((result * x) % m == 1)
+                {
+                    return x;
+                }
+            }
+            return 1;
+        }
+
+        private ulong CalculateD(ulong e, ulong m)
+        {
+            return ModInverse(e, m);
+        }
+
+        private ulong GCD(ulong a, ulong b)
+        {
+            while (b != 0)
+            {
+                ulong temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        private ulong RandomULong(ulong minValue, ulong maxValue)
+        {
+            ulong range = maxValue - minValue;
+            var bytes = new byte[sizeof(ulong)];
+            _random.NextBytes(bytes);
+            ulong result = BitConverter.ToUInt64(bytes, 0);
+
+            return (result % range) + minValue;
+        }
+
+        private ulong CalculateE(ulong m)
+        {
+            ulong e = RandomULong(2, m);
+
+            while (GCD(e, m) != 1)
+            {
+                e = RandomULong(2, m);
+            }
+
+            return e;
         }
     }
 }

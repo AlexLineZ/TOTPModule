@@ -5,8 +5,10 @@ namespace OTPModule.Services.IServices
 {
     public interface IRSAService
     {
-        public EncodeDto Encode(string plaintext);
+        public KeysDto GenerateKeys();
 
-        public string Decode(DecodeDto decodeDto);
+        public List<string> Encode(EncodeMessageDto encodeMessageDto);
+
+        public string Decode(DecodeMessageDto decodeMessageDto);
     }
 }

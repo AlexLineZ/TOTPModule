@@ -45,16 +45,22 @@ namespace OTPModule.Controllers
             return Ok();
         }
 
+        [HttpPost("generateKeys")]
+        public async Task<ActionResult<KeysDto>> GenerateKeys()
+        {
+            return Ok(_rsaService.GenerateKeys());
+        }
+
         [HttpPost("encodeMessage")]
-        public async Task<ActionResult<EncodeDto>> EncodeMessage([FromBody] string str)
+        public async Task<ActionResult<List<string>>> EncodeMessage([FromBody] EncodeMessageDto encodeMessageDto)
         { 
-            return Ok(_rsaService.Encode(str));
+            return Ok(_rsaService.Encode(encodeMessageDto));
         }
 
         [HttpPost("decodeMessage")]
-        public async Task<ActionResult<string>> DecodeMessage([FromBody] DecodeDto decodeDto)
+        public async Task<ActionResult<string>> DecodeMessage([FromBody] DecodeMessageDto decodeMessageDto)
         {
-            return Ok(_rsaService.Decode(decodeDto));
+            return Ok(_rsaService.Decode(decodeMessageDto));
         }
     }
 }
