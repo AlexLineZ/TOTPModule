@@ -3,6 +3,7 @@ using OTPModule.Services.IServices;
 using System;
 using System.Diagnostics;
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace OTPModule.Services
 {
@@ -104,9 +105,9 @@ namespace OTPModule.Services
             };
         }
 
-        public List<string> Encode(EncodeMessageDto encodeMessageDto)
+        public string Encode(EncodeMessageDto encodeMessageDto)
         {
-            List<string> result = new List<string>();
+            string result = "";
 
             BigInteger bi;
 
@@ -121,7 +122,7 @@ namespace OTPModule.Services
 
                 bi = bi % n_;
 
-                result.Add(bi.ToString());
+                result+=(char)bi;
             }
 
             return result;
@@ -133,9 +134,9 @@ namespace OTPModule.Services
 
             BigInteger bi;
 
-            foreach (string item in decodeMessageDto.Message)
+            foreach (char item in decodeMessageDto.Message)
             {
-                bi = new BigInteger(Convert.ToDouble(item));
+                bi = new BigInteger((int)item);
                 bi = BigInteger.Pow(bi, (int)decodeMessageDto.PrivateKey.D);
 
                 BigInteger n_ = new BigInteger((int)decodeMessageDto.PrivateKey.N);
@@ -199,6 +200,50 @@ namespace OTPModule.Services
             }
 
             return e;
+        }
+
+        public PrivateKeyDto GetPrivateKeyByPublic(OpenKeyDto openKey)
+        {
+            ulong e = openKey.E;
+            ulong n = openKey.N;
+
+            ulong d = 0;
+
+            for (ulong i = 1; i < n; i++)
+            {
+                if ((i * e) % EulerPhi(n) == 1)
+                {
+                    d = i;
+                    break;
+                }
+            }
+
+            return new PrivateKeyDto()
+            {
+                D = d,
+                N = n
+            };
+        }
+
+        private ulong EulerPhi(ulong n)
+        {
+            ulong result = n;
+            for (ulong i = 2; i * i <= n; i++)
+            {
+                if (n % i == 0)
+                {
+                    while (n % i == 0)
+                    {
+                        n /= i;
+                    }
+                    result -= result / i;
+                }
+            }
+            if (n > 1)
+            {
+                result -= result / n;
+            }
+            return result;
         }
     }
 }

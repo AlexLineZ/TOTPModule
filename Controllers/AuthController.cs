@@ -52,7 +52,7 @@ namespace OTPModule.Controllers
         }
 
         [HttpPost("encodeMessage")]
-        public async Task<ActionResult<List<string>>> EncodeMessage([FromBody] EncodeMessageDto encodeMessageDto)
+        public async Task<ActionResult<string>> EncodeMessage([FromBody] EncodeMessageDto encodeMessageDto)
         { 
             return Ok(_rsaService.Encode(encodeMessageDto));
         }
@@ -61,6 +61,12 @@ namespace OTPModule.Controllers
         public async Task<ActionResult<string>> DecodeMessage([FromBody] DecodeMessageDto decodeMessageDto)
         {
             return Ok(_rsaService.Decode(decodeMessageDto));
+        }
+
+        [HttpPost("getPrivateKeyByPublic")]
+        public async Task<ActionResult<PrivateKeyDto>> GetPrivateKeyByPublic([FromBody] OpenKeyDto openKey)
+        {
+            return Ok(_rsaService.GetPrivateKeyByPublic(openKey));
         }
     }
 }

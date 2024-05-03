@@ -7,8 +7,9 @@ namespace OTPModule.Services.IServices
     {
         public KeysDto GenerateKeys();
 
-        public List<string> Encode(EncodeMessageDto encodeMessageDto);
+        public string Encode(EncodeMessageDto encodeMessageDto);
 
         public string Decode(DecodeMessageDto decodeMessageDto);
+        public PrivateKeyDto GetPrivateKeyByPublic(OpenKeyDto openKey);
     }
 }

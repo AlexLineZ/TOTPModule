@@ -2,7 +2,7 @@
 {
     public class DecodeMessageDto
     {
-        public List<string> Message { get; set; }
+        public string Message { get; set; }
         public PrivateKeyDto PrivateKey { get; set; }
     }
 }
