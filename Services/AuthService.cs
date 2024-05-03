@@ -26,15 +26,20 @@ namespace OTPModule.Services
             
             var secretKey = user.SecretKey.SecretKey;
 
-            return _OTPService.GenerateTotp(secretKey);
+            return GenerateQR(secretKey);
         }
 
-        public Task Logout(string token)
+        private string GenerateQR(byte[] data)
         {
-            throw new NotImplementedException();
+            QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+
+            Base64QRCode qrCode = new Base64QRCode(qrCodeData);
+
+            return qrCode.GetGraphic(20);
         }
 
-        public async Task<QrCodeDto> Register(UserRegisterDto registerDto)
+        public async Task<string> Register(UserRegisterDto registerDto)
         {
             var secretKey = new SecretKeyEntity()
             {
@@ -51,14 +56,8 @@ namespace OTPModule.Services
             };
             _userDbContext.userEntities.Add(user);
             await _userDbContext.SaveChangesAsync();
-            
-            QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(secretKey.SecretKey, QRCodeGenerator.ECCLevel.Q);
 
-            Base64QRCode qrCode = new Base64QRCode(qrCodeData);
-            string qrCodeBase64 = qrCode.GetGraphic(20);
-
-            return new QrCodeDto { Qr = qrCodeBase64 };
+            return GenerateQR(secretKey.SecretKey);
         }
 
         public async Task<TokenResponseDto> TwoFactorAuthentication(TOTPDto TOTPDto)
