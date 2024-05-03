@@ -24,9 +24,16 @@ namespace OTPModule.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<FileResult> Login([FromBody] LoginDto loginCredentials)
+        public async Task<String> Login([FromBody] LoginDto loginCredentials)
         {
-            var qr = await _authService.Login(loginCredentials);
+            var code = await _authService.Login(loginCredentials);
+            return code;
+        }
+        
+        [HttpPost("loginQR")]
+        public async Task<FileResult> LoginQr([FromBody] LoginDto loginCredentials)
+        {
+            var qr = await _authService.LoginQR(loginCredentials);
             byte[] imageBytes = Convert.FromBase64String(qr);
 
             return File(imageBytes, "image/png");

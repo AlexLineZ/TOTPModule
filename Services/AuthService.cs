@@ -26,13 +26,24 @@ namespace OTPModule.Services
             
             var secretKey = user.SecretKey.SecretKey;
 
-            return GenerateQR(secretKey);
+            return _OTPService.GenerateTotp(secretKey);
         }
 
+        public async Task<string> LoginQR(LoginDto loginDto)
+        {
+            var user = await _userDbContext.userEntities.Include(u => u.SecretKey).FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            if (user == null) { throw new Exception(); }
+            
+            var secretKey = user.SecretKey.SecretKey;
+
+            return GenerateQR(secretKey);
+        }
+        
         private string GenerateQR(byte[] data)
         {
+            string result = string.Join(" ", data);
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(result, QRCodeGenerator.ECCLevel.Q);
 
             Base64QRCode qrCode = new Base64QRCode(qrCodeData);
 
