@@ -9,11 +9,9 @@ namespace OTPModule.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IRSAService _rsaService;
-        public AuthController(IAuthService authService, IRSAService RSAService)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
-            _rsaService = RSAService;
         }
 
         [HttpPost("register")]
@@ -43,30 +41,6 @@ namespace OTPModule.Controllers
             //string token = HttpContext.Request.Headers["Authorization"];
             //var user = await _authService.GetUser(token);
             return Ok();
-        }
-
-        [HttpPost("generateKeys")]
-        public async Task<ActionResult<KeysDto>> GenerateKeys()
-        {
-            return Ok(_rsaService.GenerateKeys());
-        }
-
-        [HttpPost("encodeMessage")]
-        public async Task<ActionResult<string>> EncodeMessage([FromBody] EncodeMessageDto encodeMessageDto)
-        { 
-            return Ok(_rsaService.Encode(encodeMessageDto));
-        }
-
-        [HttpPost("decodeMessage")]
-        public async Task<ActionResult<string>> DecodeMessage([FromBody] DecodeMessageDto decodeMessageDto)
-        {
-            return Ok(_rsaService.Decode(decodeMessageDto));
-        }
-
-        [HttpPost("getPrivateKeyByPublic")]
-        public async Task<ActionResult<PrivateKeyDto>> GetPrivateKeyByPublic([FromBody] OpenKeyDto openKey)
-        {
-            return Ok(_rsaService.GetPrivateKeyByPublic(openKey));
         }
     }
 }
