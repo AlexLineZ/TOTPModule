@@ -121,4 +121,20 @@ public class DesService: IDesService
     {
         return key.Substring(ShiftKey) + key.Substring(0, ShiftKey);
     }
+    
+    public async Task<string> BruteForceDecrypt(string ciphertext, string knownPlaintext)
+    {
+        for (int key = 0; key < (1 << 16); key++)
+        {
+            string trialKey = Convert.ToString(key, 2).PadLeft(16, '0');
+            var decrypted = await DesDecode(ciphertext, trialKey);
+
+            if (decrypted.Output == knownPlaintext)
+            {
+                return trialKey; 
+            }
+        }
+
+        return "Key not found";
+    }
 }

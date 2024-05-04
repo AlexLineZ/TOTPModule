@@ -28,4 +28,11 @@ public class DesController : ControllerBase
         var result = await _desService.DesDecode(request.Input, request.Key);
         return Ok(new { Result = result });
     }
+    
+    [HttpPost("brute")]
+    public async Task<ActionResult<String>> Decode([FromQuery] String text, [FromQuery] String plainText)
+    {
+        var result = await _desService.BruteForceDecrypt(text, plainText);
+        return Ok(new { Result = result });
+    }
 }

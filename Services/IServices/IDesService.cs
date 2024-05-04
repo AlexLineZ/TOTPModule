@@ -8,4 +8,6 @@ public interface IDesService
     public Task<DesResponse> DesEncode(string s, string key);
     
     public Task<DesResponse> DesDecode(string s, string key);
+
+    public Task<string> BruteForceDecrypt(string text, string plainText);
 }
